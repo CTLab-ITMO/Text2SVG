@@ -20,6 +20,7 @@ setup(
     entry_points={
         'console_scripts': [
             'optimize_dir = optimization.main:main',
+            'caption_dir = captioning.main:main'
         ],
     },
     install_requires=get_requirements()

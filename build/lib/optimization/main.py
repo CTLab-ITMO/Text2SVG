@@ -104,8 +104,8 @@ def main():
     parser = argparse.ArgumentParser(
         description="Optimize SVGs with Python and then further optimize them with SVGO."
     )
-    parser.add_argument("--input_dir", help="Directory containing original SVG files.")
-    parser.add_argument("--output_dir", help="Directory to store optimized SVGs.")
+    parser.add_argument("input_dir", help="Directory containing original SVG files.")
+    parser.add_argument("output_dir", help="Directory to store optimized SVGs.")
     # parser.add_argument("final_output_dir", help="Directory to store final SVGO-optimized SVGs.")
     
     parser.add_argument("--cubic_only", dest="cubic_only", action="store_true",
