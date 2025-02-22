@@ -85,5 +85,3 @@ Currently there are several scripts for training and evaluation. All training is
 ```
 python3 run_training.py
 ```
-
-
