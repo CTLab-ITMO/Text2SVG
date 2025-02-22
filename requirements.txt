@@ -1,0 +1,11 @@
+CairoSVG
+cssutils
+datasets
+huggingface_hub
+numpy
+Pillow
+svgelements
+svgpathtools
+torch
+tqdm
+transformers
