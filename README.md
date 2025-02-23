@@ -86,7 +86,7 @@ Currently there are several scripts for training and evaluation. All training is
 python3 run_training.py
 ```
 
-### Example
+### Example of current generation
 
 <img src="https://github.com/CTLab-ITMO/Text2SVG/blob/main/imgs/generated_comp.png?raw=true" alt="Initial image"/>
 
