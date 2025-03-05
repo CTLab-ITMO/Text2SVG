@@ -14,7 +14,13 @@ TIMEOUT = 10  # seconds for each request
 # We skip inline <svg> if it has only a <use xlink:href="...">
 def is_use_only_svg(svg_text: str) -> bool:
     lower = svg_text.lower()
-    return ("<use" in lower) and ("xlink:href" in lower)
+    # Skip if <use> plus either xlink:href=... or href=...
+    return (
+        "<use" in lower
+        and (
+            "href" in lower
+        )
+    )
 
 
 class AsyncSVGCrawler:
