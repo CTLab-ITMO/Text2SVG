@@ -81,7 +81,11 @@ class AsyncSVGCrawler:
         if not html:
             return
 
-        soup = BeautifulSoup(html, "html.parser")
+        try:
+            soup = BeautifulSoup(html, "html.parser")
+        except Exception as e:
+            logging.warning(f"Skipping {url} due to parse error: {e}")
+            return
 
         # 1) Inline <svg>
         inline_svgs = soup.find_all("svg")

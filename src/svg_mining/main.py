@@ -27,7 +27,7 @@ async def process_single_url(url: str, crawler: AsyncSVGCrawler, sem: asyncio.Se
         await crawler.process_url(url)
     pbar.update(1)
 
-async def run(parquet_url: str, max_concurrency: int):
+async def run(parquet_url: str, max_concurrency: int, start_offset: int):
     """
     1) Download the parquet file if necessary
     2) Determine output folder from the filename
@@ -56,7 +56,7 @@ async def run(parquet_url: str, max_concurrency: int):
         # 4) Setup progress bar
         with tqdm(total=total_rows, desc="Processing URLs") as pbar:
             # 5) Iterate row-groups
-            for urls in iterate_parquet_rows(local_file, column_name="url"):
+            for urls in iterate_parquet_rows(local_file, column_name="url", start_offset=start_offset):
                 # Each chunk is a list of unique URLs
                 await process_urls_in_chunk(urls, crawler, sem, pbar)
 
@@ -65,7 +65,9 @@ async def run(parquet_url: str, max_concurrency: int):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--parquet-url", required=True, help="URL to the Parquet file containing a 'url' column.")
-    parser.add_argument("--max-concurrency", type=int, default=1_000, help="Max concurrent fetches (default=20).")
+    parser.add_argument("--max-concurrency", type=int, default=300, help="Max concurrent fetches (default=20).")
+    parser.add_argument("--start-offset", type=int, default=0,
+                    help="Skip this many URLs before processing.")
     args = parser.parse_args()
 
     logging.basicConfig(
@@ -73,7 +75,7 @@ def main():
         format="%(asctime)s [%(levelname)s] %(message)s"
     )
 
-    asyncio.run(run(args.parquet_url, args.max_concurrency))
+    asyncio.run(run(args.parquet_url, args.max_concurrency, args.start_offset))
 
 if __name__ == "__main__":
     main()

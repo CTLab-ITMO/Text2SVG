@@ -27,20 +27,32 @@ def download_parquet(parquet_url: str) -> str:
     return local_filename
 
 
-def iterate_parquet_rows(local_filename: str, column_name="url"):
-    """
-    Yields row-group chunks of unique URLs from a Parquet file.
-    Each yield is a list of unique URLs (strings).
-    We assume the Parquet has a column named `column_name` = "url".
-    """
-    pqfile = pq.ParquetFile(local_filename)
-    num_row_groups = pqfile.metadata.num_row_groups
+def iterate_parquet_rows(local_file, column_name="url", start_offset=0):
+    import pyarrow.parquet as pq
+    pqfile = pq.ParquetFile(local_file)
+    logging.info(f"{local_file} has {pqfile.metadata.num_row_groups} row-groups, "
+                 f"total {pqfile.metadata.num_rows} rows.")
 
-    logging.info(f"{local_filename} has {num_row_groups} row-groups, total {pqfile.metadata.num_rows} rows.")
-
-    for rg_idx in range(num_row_groups):
+    row_count = 0
+    for rg_idx in range(pqfile.metadata.num_row_groups):
         table = pqfile.read_row_group(rg_idx, columns=[column_name])
         df = table.to_pandas()
-        # Drop missing or duplicated
-        urls = df[column_name].dropna().unique().tolist()
-        yield urls
+        unique_urls = df[column_name].dropna().unique().tolist()
+
+        # If the entire group is before our offset, skip it
+        if row_count + len(unique_urls) <= start_offset:
+            row_count += len(unique_urls)
+            continue
+
+        # If we're partially in this group, slice it
+        if row_count < start_offset:
+            skip = start_offset - row_count
+            unique_urls = unique_urls[skip:]
+            row_count = start_offset
+        else:
+            # Otherwise, we've passed the offset
+            pass
+
+        yield unique_urls
+        row_count += len(unique_urls)
+
