@@ -1,0 +1,5 @@
+aiohttp==3.9.1
+beautifulsoup4==4.13.3
+pyarrow==19.0.0
+Requests==2.32.3
+tqdm==4.67.1
