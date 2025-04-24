@@ -19,7 +19,7 @@ setup(
     package_dir={"": "src"},
     entry_points={
         'console_scripts': [
-            'optimize_dir = optimization.main:main',
+            'optimize_svg_corpus = optimization.main:main',
             'caption_dir = captioning.main:main'
         ],
     },
