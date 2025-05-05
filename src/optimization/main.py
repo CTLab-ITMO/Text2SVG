@@ -1,6 +1,7 @@
 import argparse
 from .optimization import optimize_svg_corpus
 
+
 def main():
     parser = argparse.ArgumentParser(description="Optimize SVG corpus.")
     parser.add_argument('--input_dir', required=True, help="Directory containing original SVG files.")

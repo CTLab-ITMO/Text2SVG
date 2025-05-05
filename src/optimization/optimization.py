@@ -11,6 +11,28 @@ from .hashing import hash_svg
 from .util import _shard, _write_svg
 
 
+# def optimize_svg_debug(
+#     svg,
+#     stage1_opts: Dict[str, Any] | None = None,
+#     stage2_config_path: str | None = None,
+# ) -> Dict[str, Any]:
+
+#     stage1_opts = stage1_opts or {}
+#     stage2_config_path = stage2_config_path or {}
+    
+#     stage1_result = optimization_stage1(svg, **stage1_opts)
+#     if stage1_result is None:
+#         raise RuntimeError("Stage-1 optimisation failed")
+
+#     _write_svg(stage1_result, stage1_hash, corpus_root / "SVG")
+
+#     # ------------------------------------------------------------------
+#     # 2. Stage-2
+#     # ------------------------------------------------------------------
+    
+#     stage2_result = optimization_stage2(stage1_path, config=stage2_config_path)
+#     stage2_hash = hash_svg(stage2_result)
+
 
 def optimize_one_svg(
     raw_path: Path,
@@ -39,7 +61,9 @@ def optimize_one_svg(
         raw_path = corpus_root / "SVG" / _shard(raw_hash) / f"{raw_hash}.svg"
         
         metadata['raw'] = raw_hash
-        assert not raw_path.exists()
+        # if raw_path.exists(): # don't saving duplicated hash
+        #     print(f'Duplicate, hash: {raw_hash}.')
+        #     return None
         
         _write_svg(raw_svg, raw_hash, corpus_root / "SVG")
             
@@ -66,10 +90,16 @@ def optimize_one_svg(
         
         metadata['stage2'] = stage2_hash
         _write_svg(stage2_result, stage2_hash, corpus_root / "SVG")
-    except:
-        pass
-    finally:
+        
         return metadata
+        
+    except Exception as e:
+        # import traceback
+        # traceback.print_exc()
+        # raise e
+        pass
+    
+    return None
 
 
 def _worker(
