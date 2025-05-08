@@ -56,7 +56,7 @@ _DEFAULT_OPTS = dict(
 )
 
 
-def optimize_svg(svg: str, timeout: int = 2, **opts) -> str | None:
+def optimize_svg(svg: str, timeout: int = 2, quiet: bool = False, **opts) -> str | None:
     """Optimise **svg** string and return the cleaned SVG string.
 
     If optimisation fails (fatal parse error, timeout, or resulting SVG empty)
@@ -64,18 +64,54 @@ def optimize_svg(svg: str, timeout: int = 2, **opts) -> str | None:
     """
     cfg = _DEFAULT_OPTS.copy()
     cfg.update(opts)
+    
+    # Make sure quiet flag is passed to optimize_svg_from_str
+    cfg['quiet'] = quiet
 
+    # Print the first 100 chars of the SVG for debugging
+    if not quiet:
+        print(f"SVG content preview: {svg[:100]}...")
+    
+    # Check if SVG is empty or too small
+    if not svg or len(svg) < 20:
+        if not quiet:
+            print(f"SVG content is too small: {len(svg)} chars")
+        return None
+    
     try:
         with _alarm(timeout):
+            if not quiet:
+                print("Calling optimize_svg_from_str...")
             root = optimize_svg_from_str(svg, **cfg)
-    except (TimeoutException, Exception):  # broad on purpose, we log below
-        # traceback.print_exc(limit=1)
+            if not quiet:
+                print("optimize_svg_from_str completed successfully")
+    except TimeoutException:
+        if not quiet:
+            print(f"Timeout after {timeout} seconds while processing SVG")
+        return None
+    except Exception as e:
+        if not quiet:
+            print(f"Error during SVG optimization: {type(e).__name__}: {str(e)}")
+            traceback.print_exc()
         return None
 
+    # Check if the root is valid
+    if root is None:
+        if not quiet:
+            print("optimize_svg_from_str returned None")
+        return None
+    
     try:
-        return _postprocess_root(root)
-    except Exception:  # XML serialisation failed
-        # traceback.print_exc(limit=1)
+        if not quiet:
+            print("Postprocessing SVG...")
+        result = _postprocess_root(root)
+        if not quiet:
+            print(f"Postprocessing completed, result length: {len(result)} chars")
+        return result
+    except Exception as e:
+        if not quiet:
+            print(f"Error during SVG postprocessing: {type(e).__name__}: {str(e)}")
+            traceback.print_exc()
         return None
 
 

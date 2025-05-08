@@ -209,7 +209,7 @@ def optimize_path(path_str, transform=np.eye(3)):
                     yy = x * sin_rot + y * cos_rot
                     points.append((cx + rx * xx, cy + ry * yy))
 
-                    # If it’s not the last arc piece, add an intermediate end point
+                    # If it's not the last arc piece, add an intermediate end point
                     if not last:
                         points.append(
                             (
@@ -329,6 +329,7 @@ def optimize_shape(
     normalize_points=False,
     normalize_scale=1.0,
     normalize_to_int=False,
+    quiet=False,
 ):
     tag = remove_namespaces(node.tag)
     new_transform = parse_common_attrib(node, transform)
@@ -349,6 +350,7 @@ def optimize_shape(
             normalize_points=normalize_points,
             normalize_scale=normalize_scale,
             normalize_to_int=normalize_to_int,
+            quiet=quiet,
         )
     elif tag in ['circle', 'ellipse']:
         # Convert circle or ellipse to path
@@ -374,6 +376,7 @@ def optimize_shape(
             normalize_points=normalize_points,
             normalize_scale=normalize_scale,
             normalize_to_int=normalize_to_int,
+            quiet=quiet,
         )
         # Remove the circle/ellipse attributes
         node.attrib.pop('r', None)
@@ -410,6 +413,7 @@ def optimize_shape(
             normalize_points=normalize_points,
             normalize_scale=normalize_scale,
             normalize_to_int=normalize_to_int,
+            quiet=quiet,
         )
         # Remove the rect attributes
         node.attrib.pop('x', None)
@@ -457,7 +461,8 @@ def optimize_shape(
                 path_str += ' '
         node.set('points', path_str)
     else:
-        print(f"---- Warning: tag {tag} is not supported")
+        if not quiet:
+            print(f"---- Warning: tag {tag} is not supported")
 
     # Possibly adjust the normalization scale based on uniform transform
     if abs(abs(new_transform[0, 0]) - abs(new_transform[1, 1])) < 0.0001 and abs(new_transform[0, 0]) > 1e-8:
@@ -466,7 +471,7 @@ def optimize_shape(
     normalize_attributes(node, attrs_to_normalize, normalize_points, normalize_scale, normalize_to_int)
 
 
-def normalize_style_tag(node, attrs_to_normalize, normalize_points, normalize_scale, normalize_to_int):
+def normalize_style_tag(node, attrs_to_normalize, normalize_points, normalize_scale, normalize_to_int, quiet=False):
     """
     If the node is a <style> block with CSS rules, parse them with cssutils and 
     apply transformations to relevant attributes (e.g., stroke-width).
@@ -482,7 +487,8 @@ def normalize_style_tag(node, attrs_to_normalize, normalize_points, normalize_sc
                     # e.g. .classname {...}
                     defs[name] = parse_style_attribute(rule.style.getCssText())
                 else:
-                    print(f"---- WARNING: stylesheet has unknown style: {name}")
+                    if not quiet:
+                        print(f"---- WARNING: stylesheet has unknown style: {name}")
         return defs
 
     defs = parse_stylesheet(node)
@@ -554,6 +560,7 @@ def update_data_in_path_node(
     normalize_points=False,
     normalize_scale=1.0,
     normalize_to_int=False,
+    quiet=False,
 ):
     """
     Rebuild the 'd' attribute in <path> from the list of 
@@ -642,8 +649,9 @@ def update_data_in_path_node(
                 ]
                 cur_to_add_to_point_id = 3
             else:
-                print(f"---- Warning: control points {num_control_points[j]} not supported")
-                raise
+                if not quiet:
+                    print(f"---- Warning: control points {num_control_points[j]} not supported")
+                raise ValueError(f"Unsupported number of control points: {num_control_points[j]}")
 
             # Normalize the segment points if asked
             if normalize_points:
@@ -680,6 +688,7 @@ def optimize_from_node(
     normalize_points=False,
     normalize_scale=1.0,
     normalize_to_int=False,
+    quiet=False,
 ):
     """
     Recursively optimize the SVG DOM from this node downward.
@@ -692,6 +701,7 @@ def optimize_from_node(
         "normalize_points": normalize_points,
         "normalize_scale": normalize_scale,
         "normalize_to_int": normalize_to_int,
+        "quiet": quiet,
     }
 
     cur_tag = remove_namespaces(node.tag)
@@ -719,7 +729,7 @@ def optimize_from_node(
 
     # If it's <style>, handle CSS
     if cur_tag == 'style':
-        normalize_style_tag(node, attrs_to_normalize, normalize_points, normalize_scale, normalize_to_int)
+        normalize_style_tag(node, attrs_to_normalize, normalize_points, normalize_scale, normalize_to_int, quiet)
     else:
         # Otherwise, just normalize numeric attributes
         normalize_attributes(node, attrs_to_normalize, normalize_points, normalize_scale, normalize_to_int)
@@ -731,6 +741,7 @@ def optimize_from_root(
     normalize_points=False,
     normalize_scale=1.0,
     normalize_to_int=False,
+    quiet=False,
 ):
     """
     Starting point to optimize an entire SVG tree.
@@ -756,13 +767,15 @@ def optimize_from_root(
             canvas_width = parse_float(root.attrib['width'])
             view_box[2] = canvas_width
         else:
-            print("---- Warning: Can't find canvas width.")
+            if not quiet:
+                print("---- Warning: Can't find canvas width.")
             canvas_width = 1.0
         if 'height' in root.attrib:
             canvas_height = parse_float(root.attrib['height'])
             view_box[3] = canvas_height
         else:
-            print("---- Warning: Can't find canvas height.")
+            if not quiet:
+                print("---- Warning: Can't find canvas height.")
             canvas_height = 1.0
 
     # Ensure root has numeric width/height
@@ -781,6 +794,9 @@ def optimize_from_root(
         root.set('viewbox', f"{view_box[0]} {view_box[1]} {view_box[2]} {view_box[3]}")
         kwargs["normalize_scale"] = scale
 
+    # Ensure quiet is passed
+    kwargs["quiet"] = quiet
+    
     optimize_from_node(
         root,
         cubic_only=cubic_only,
@@ -797,22 +813,51 @@ def optimize_svg_from_str(
     normalize_points=False,
     normalize_scale=1.0,
     normalize_to_int=False,
+    quiet=False,
 ):
     """
     Main entry point: pass in an SVG string, return an optimized Element.
     """
-    root = etree.fromstring(svg_str)
+    try:
+        # Check if the SVG string is valid
+        if not svg_str or len(svg_str) < 50:
+            if not quiet:
+                print(f"SVG string is too short: {len(svg_str)} chars")
+            return None
+            
+        # Check if the SVG contains an svg element
+        if "<svg" not in svg_str:
+            if not quiet:
+                print("SVG string does not contain <svg> element")
+            return None
+            
+        if not quiet:
+            print("Parsing SVG string...")
+        root = etree.fromstring(svg_str)
+        if not quiet:
+            print("Successfully parsed SVG string")
 
-    # Convert all attribute names to lowercase so "viewBox" -> "viewbox" etc.
-    lowercase_attributes(root)
+        # Convert all attribute names to lowercase so "viewBox" -> "viewbox" etc.
+        lowercase_attributes(root)
 
-    return optimize_from_root(
-        root,
-        cubic_only=cubic_only,
-        normalize_points=normalize_points,
-        normalize_scale=normalize_scale,
-        normalize_to_int=normalize_to_int,
-    )
+        return optimize_from_root(
+            root,
+            cubic_only=cubic_only,
+            normalize_points=normalize_points,
+            normalize_scale=normalize_scale,
+            normalize_to_int=normalize_to_int,
+        )
+    except etree.ParseError as e:
+        if not quiet:
+            print(f"XML parse error: {str(e)}")
+            print(f"First 200 chars of SVG: {svg_str[:200]}...")
+        return None
+    except Exception as e:
+        if not quiet:
+            print(f"Error in optimize_svg_from_str: {type(e).__name__}: {str(e)}")
+            import traceback
+            traceback.print_exc()
+        return None
 
 
 def optimize_svg_from_file(

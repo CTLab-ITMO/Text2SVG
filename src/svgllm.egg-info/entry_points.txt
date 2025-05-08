@@ -1,0 +1,3 @@
+[console_scripts]
+caption_dir = captioning.main:main
+optimize_svg_corpus = optimization.main:main
