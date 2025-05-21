@@ -128,7 +128,7 @@ def iterate_dataset_urls(dataset_name, column_name="url", start_offset=0, batch_
         logging.debug(f"Total URLs processed: {url_count}, Invalid URLs: {invalid_count}")
 
 async def run(dataset_name: str, column_name: str, max_concurrency: int, start_offset: int, 
-              debug: bool, batch_size: int, timeout: int):
+              debug: bool, batch_size: int, timeout: int, output_dir: str):
     """
     1) Create output folder
     2) Create an aiohttp session + crawler
@@ -136,15 +136,15 @@ async def run(dataset_name: str, column_name: str, max_concurrency: int, start_o
     4) For each chunk (list of URLs), schedule tasks
     5) Show a TQDM progress bar
     """
-    # 1) Create output folder
-    out_folder = "/hdd/mined_svgs_2"
+    # Create output folder
+    out_folder = output_dir
     os.makedirs(out_folder, exist_ok=True)
     
     if debug:
         logging.debug(f"Created output folder: {out_folder}")
         logging.debug(f"Max concurrency: {max_concurrency}")
 
-    # 2) Create session + crawler with optimized settings for speed
+    # Create session + crawler with optimized settings for speed
     connector = aiohttp.TCPConnector(
         limit=max_concurrency * 4,  # Increase the connection limit
         ttl_dns_cache=300,  # Cache DNS results for 5 minutes
@@ -172,16 +172,13 @@ async def run(dataset_name: str, column_name: str, max_concurrency: int, start_o
         if debug:
             logging.debug("Created HTTP session and crawler")
 
-        # 3) Setup progress bar (indeterminate for streaming datasets)
         with tqdm(desc="Processing URLs") as pbar:
-            # 4) Create a queue for URL batches with larger capacity
-            url_queue = asyncio.Queue(maxsize=10)  # Increase queue size for 5950X
+            url_queue = asyncio.Queue(maxsize=10)
             
-            # 5) Start multiple consumers for better parallelism - optimized for 5950X (16 cores/32 threads)
             consumers = []
-            num_consumers = 8  # Use 8 consumers for 5950X
+            num_consumers = 8
             
-            # 6) Define consumer function
+            # Define consumer function
             async def url_consumer(consumer_id):
                 while True:
                     try:
@@ -200,7 +197,7 @@ async def run(dataset_name: str, column_name: str, max_concurrency: int, start_o
                 if debug:
                     logging.debug(f"Consumer {consumer_id} finished")
             
-            # 7) Start URL producer
+            # Start URL producer
             async def url_producer():
                 try:
                     count = 0
@@ -219,12 +216,12 @@ async def run(dataset_name: str, column_name: str, max_concurrency: int, start_o
                     for _ in range(num_consumers):
                         await url_queue.put(None)
             
-            # 8) Start producer and consumers
+            # Start producer and consumers
             producer = asyncio.create_task(url_producer())
             for i in range(num_consumers):
                 consumers.append(asyncio.create_task(url_consumer(i)))
             
-            # 9) Wait for all tasks to complete with timeout
+            # Wait for all tasks to complete with timeout
             try:
                 await asyncio.wait_for(producer, timeout=None)  # No timeout for producer
                 await asyncio.wait_for(asyncio.gather(*consumers), timeout=60)  # 60 sec timeout for consumers
@@ -248,6 +245,8 @@ def main():
                       help="Batch size for URL processing (default=50000)")
     parser.add_argument("--timeout", type=int, default=1,
                       help="Timeout in seconds for HTTP requests (default=1)")
+    parser.add_argument("--output-dir", required=True,
+                      help="Directory where SVG files will be saved")
     args = parser.parse_args()
 
     log_level = logging.DEBUG if args.debug else logging.INFO
@@ -260,18 +259,9 @@ def main():
         logging.debug("Debug mode enabled")
         logging.debug(f"Arguments: {args}")
     
-    # Increase default asyncio limits for 5950X
     asyncio.get_event_loop().set_default_executor(
-        ProcessPoolExecutor(max_workers=24)  # Use more workers for 5950X
+        ProcessPoolExecutor(max_workers=24)
     )
-    
-    # Increase file limit on Unix systems if possible
-    try:
-        import resource
-        resource.setrlimit(resource.RLIMIT_NOFILE, (131072, 131072))  # Even higher limits for 5950X
-    except (ImportError, ValueError):
-        if args.debug:
-            logging.debug("Could not increase file limit")
 
     asyncio.run(run(
         args.dataset, 
@@ -280,7 +270,8 @@ def main():
         args.start_offset, 
         args.debug,
         args.batch_size,
-        args.timeout
+        args.timeout,
+        args.output_dir  # Pass output directory
     ))
 
 if __name__ == "__main__":
