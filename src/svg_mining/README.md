@@ -2,6 +2,9 @@
 
 A tool for mining SVG files from websites using URLs from Hugging Face datasets.
 
+On my setup (7950X CPU, 100 MB/s throughput), the system processes approximately 4 million URLs per day. The chart below shows a one-month extrapolation. Due to a high number of duplicate entries, the growth in unique SVGs is sublinear, significantly deviating from a linear trend.
+<img src=https://github.com/CTLab-ITMO/Text2SVG/blob/main/imgs/One-Month%20Extrapolation.png alt="Initial image"/>
+
 ## Installation
 
 ```bash
