@@ -60,3 +60,7 @@ SVGs are saved to the specified output directory in JSONL format with the follow
 ```
 
 Files are organized in subfolders by the first two characters of SVGs MD5 hash.
+
+## Example
+
+Example of mined svgs is available at [HF](https://huggingface.co/datasets/VectorGraphics/open-svg).
