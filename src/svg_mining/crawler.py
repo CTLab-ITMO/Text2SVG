@@ -34,7 +34,7 @@ class AsyncSVGCrawler:
     def __init__(self, session: aiohttp.ClientSession, output_folder: str, 
                 timeout=DEFAULT_TIMEOUT, max_retries=2):
         self.session = session
-        self.output_folder = "/hdd/mined_svgs_2"  # Changed output folder
+        self.output_folder = output_folder  # Use provided output folder
         self.timeout = timeout
         self.max_retries = max_retries
         
