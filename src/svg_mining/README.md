@@ -28,8 +28,8 @@ python3 main.py --dataset nhagar/fineweb_urls --output-dir /path/to/output/direc
 
 ```bash
 python3 main.py \
-  --dataset dataset_name \
-  --column url_column_name \
+  --dataset nhagar/fineweb_urls \
+  --column url \
   --output-dir /path/to/output/directory \
   --max-concurrency 500 \ # better not set too high
   --batch-size 50000 \
