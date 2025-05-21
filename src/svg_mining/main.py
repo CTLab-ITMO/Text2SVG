@@ -239,13 +239,13 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--dataset", required=True, help="Hugging Face dataset name (e.g., 'username/dataset')")
     parser.add_argument("--column", default="url", help="Column name containing URLs (default='url')")
-    parser.add_argument("--max-concurrency", type=int, default=3000, 
-                      help="Max concurrent fetches (default=3000)")
+    parser.add_argument("--max-concurrency", type=int, default=500, 
+                      help="Max concurrent fetches (default=500)")
     parser.add_argument("--start-offset", type=int, default=0,
                       help="Skip this many URLs before processing")
     parser.add_argument("--debug", action="store_true", help="Enable debug mode with detailed logging")
-    parser.add_argument("--batch-size", type=int, default=20000, 
-                      help="Batch size for URL processing (default=20000)")
+    parser.add_argument("--batch-size", type=int, default=50000, 
+                      help="Batch size for URL processing (default=50000)")
     parser.add_argument("--timeout", type=int, default=1,
                       help="Timeout in seconds for HTTP requests (default=1)")
     args = parser.parse_args()
