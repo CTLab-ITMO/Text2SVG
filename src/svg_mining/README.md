@@ -41,8 +41,8 @@ python3 main.py \
 - `--dataset`: Hugging Face dataset name (required)
 - `--output-dir`: Directory where SVG files will be saved (required)
 - `--column`: Column name containing URLs (default: "url")
-- `--max-concurrency`: Maximum concurrent HTTP requests (default: 3000)
-- `--batch-size`: Batch size for URL processing (default: 20000)
+- `--max-concurrency`: Maximum concurrent HTTP requests (default: 500)
+- `--batch-size`: Batch size for URL processing (default: 50000)
 - `--timeout`: Timeout in seconds for HTTP requests (default: 1)
 - `--start-offset`: Skip this many URLs before processing (default: 0)
 - `--debug`: Enable debug mode with detailed logging
