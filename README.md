@@ -27,7 +27,7 @@ apt update & apt install libcairo2
 
 A tool for mining SVG files from websites using URLs from HuggingFace datasets. Collects approximately 4 million URLs per month, considering deduplication.
 
-<img src="/data/Text2SVG/imgs/One-Month Extrapolation.png" alt="Growth projection showing sublinear scaling due to deduplication" width="600"/>
+<img src="https://github.com/CTLab-ITMO/Text2SVG/blob/main/imgs/One-Month%20Extrapolation.png" alt="Growth projection showing sublinear scaling due to deduplication" width="600"/>
 
 #### Installation
 
