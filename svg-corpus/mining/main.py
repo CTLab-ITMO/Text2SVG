@@ -9,7 +9,7 @@ from tqdm import tqdm
 from datasets import load_dataset
 from crawler import AsyncSVGCrawler
 import random
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
 import multiprocessing
 
 # Maximum number of connection errors before skipping a URL
@@ -260,7 +260,7 @@ def main():
         logging.debug(f"Arguments: {args}")
     
     asyncio.get_event_loop().set_default_executor(
-        ProcessPoolExecutor(max_workers=24)
+        ThreadPoolExecutor(max_workers=24)
     )
 
     asyncio.run(run(
