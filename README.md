@@ -291,41 +291,8 @@ inputs = tokenizer([
 ], return_tensors="pt").to("cuda")
 ```
 
-## SVG Encoder Architecture
-
-The SVG encoder component handles the neural architecture for text-to-SVG generation:
-
-- **Tokenization:** Custom SVG tokenizer optimized for path data
-- **Architecture:** Transformer-based encoder-decoder with SVG-specific attention
-- **Training:** Multi-stage training with curriculum learning
-- **Inference:** Efficient generation with beam search and constraint satisfaction
-
-### Model Configurations
-
-Available in different sizes:
-- **Base:** Efficient for most use cases
-- **Large:** Higher quality generation for complex SVGs
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests for new functionality
-5. Submit a pull request
+## SVG Encoder
 
 ## License
 
-This project is licensed under the MIT License. See LICENSE file for details.
-
 ## Citation
-
-If you use this work in your research, please cite:
-
-```bibtex
-@misc{text2svg2024,
-  title={Text2SVG: A Complete Pipeline for SVG Generation from Text},
-  author={...},
-  year={2024}
-}
-``` 
