@@ -35,7 +35,7 @@ Ensure, you have run quick start installation steps.
 
 ```bash
 cd Text2SVG/svg-corpus/mining
-pip install -r requirments.txt
+pip install -r requirements.txt
 ```
 
 #### Basic Usage
