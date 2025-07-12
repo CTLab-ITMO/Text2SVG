@@ -11,8 +11,8 @@ Text2SVG
 │   ├── mining         # Web scraping SVG files
 │   ├── optimization   # Two-stage SVG optimization
 │   └── captioning     # VLM-based SVG description generation
-├── llm4svg            # Training and evaluation scripts
-└── svg-encoder        # Model architecture and inference
+├── llm4svg            # LLM for SVG generation fine-tuning
+└── svg-encoder        # Encoder of SVG 
 ```
 
 ## Quick Start
