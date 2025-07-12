@@ -57,12 +57,14 @@ async def process_single_url(url: str, crawler: AsyncSVGCrawler, sem: asyncio.Se
     
     pbar.update(1)
 
-def iterate_dataset_urls(dataset_name, column_name="url", start_offset=0, batch_size=1000, debug=False):
+def iterate_dataset_urls(dataset_name, column_name="url", start_offset=0, batch_size=1000, max_urls=None, debug=False):
     """
     Stream URLs from a Hugging Face dataset, yielding them in batches.
     """
     if debug:
         logging.debug(f"Loading dataset: {dataset_name}, column: {column_name}, offset: {start_offset}")
+        if max_urls is not None:
+            logging.debug(f"Maximum URLs to process: {max_urls}")
     
     dataset = load_dataset(dataset_name, streaming=True).shuffle() # don't change shuffling seed
     
@@ -96,6 +98,12 @@ def iterate_dataset_urls(dataset_name, column_name="url", start_offset=0, batch_
     internal_batch_size = min(batch_size, 10000)  # Never use internal batches larger than 10k
     
     for i, item in enumerate(stream):
+        # Check if we've reached the URL limit
+        if max_urls is not None and url_count >= max_urls:
+            if debug:
+                logging.debug(f"Reached URL limit of {max_urls}, stopping")
+            break
+            
         if column_name in item:
             url = item[column_name]
             if url and isinstance(url, str) and url not in seen_urls:
@@ -114,6 +122,12 @@ def iterate_dataset_urls(dataset_name, column_name="url", start_offset=0, batch_
                     logging.debug(f"Yielding batch {batch_count} with {len(current_batch)} URLs")
                 yield current_batch
                 current_batch = []
+                
+                # Check if we've reached the limit after yielding
+                if max_urls is not None and url_count >= max_urls:
+                    if debug:
+                        logging.debug(f"Reached URL limit of {max_urls}, stopping")
+                    break
         elif debug and i < 5:  # Only show first few missing columns to avoid log flooding
             logging.debug(f"Item at position {i+start_offset} missing column '{column_name}': {item.keys()}")
     
@@ -128,7 +142,7 @@ def iterate_dataset_urls(dataset_name, column_name="url", start_offset=0, batch_
         logging.debug(f"Total URLs processed: {url_count}, Invalid URLs: {invalid_count}")
 
 async def run(dataset_name: str, column_name: str, max_concurrency: int, start_offset: int, 
-              debug: bool, batch_size: int, timeout: int, output_dir: str):
+              debug: bool, batch_size: int, timeout: int, output_dir: str, max_urls: int | None = None):
     """
     1) Create output folder
     2) Create an aiohttp session + crawler
@@ -202,7 +216,7 @@ async def run(dataset_name: str, column_name: str, max_concurrency: int, start_o
                 try:
                     count = 0
                     for urls in iterate_dataset_urls(dataset_name, column_name, start_offset, 
-                                                   batch_size=batch_size, debug=debug):
+                                                   batch_size=batch_size, max_urls=max_urls, debug=debug):
                         await url_queue.put(urls)
                         count += 1
                     # Send end signals to all consumers
@@ -247,6 +261,8 @@ def main():
                       help="Timeout in seconds for HTTP requests (default=1)")
     parser.add_argument("--output-dir", required=True,
                       help="Directory where SVG files will be saved")
+    parser.add_argument("--max-urls", type=int, default=None,
+                      help="Maximum number of URLs to process (default=None, no limit)")
     args = parser.parse_args()
 
     log_level = logging.DEBUG if args.debug else logging.INFO
@@ -271,7 +287,8 @@ def main():
         args.debug,
         args.batch_size,
         args.timeout,
-        args.output_dir  # Pass output directory
+        args.output_dir,  # Pass output directory
+        args.max_urls     # Pass max URLs limit
     ))
 
 if __name__ == "__main__":
