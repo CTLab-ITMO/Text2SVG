@@ -271,30 +271,117 @@ inputs = tokenizer([
 
 ## SVG Encoder
 
-A module for encoding SVGs (obtaining embeddings of vector images) is [here](svg-encoder).
+A specialized encoder for vector graphics that creates semantic embeddings of SVG files. The encoder is based on [ModernBERT](https://github.com/AnswerDotAI/ModernBERT) architecture but trained specifically on SVG corpus for better understanding of vector graphics structure and semantics.
 
-The training is based on [ModernBERT](https://github.com/AnswerDotAI/ModernBERT).
+### Architecture
+
+The SVG encoder follows ModernBERT's architecture with several key adaptations:
+- Custom tokenizer trained on SVG corpus with discrete tokens for SVG tags, attributes, and coordinate values
+- Context length support up to 8,192 tokens
+- Available in two model sizes: base and large
 
 ### Training Process
 
-The SVG encoder model was trained in original ModernBERT settings on a large SVG corpus:
-- First stage: 12 billion tokens
-- Second stage: 3 billion tokens 
-- Third stage: 2 billion tokens
+#### Tokenizer Training
 
-### Usage (current scripts)
+The SVG-specific tokenizer was trained using the `transformers` library on a large SVG corpus. Key features:
+- Vocabulary size: 50,368 tokens
+- Special tokens for SVG tags (`<svg>`, `<path>`, `<rect>`, etc.)
+- Dedicated tokens for SVG attributes (`viewBox`, `fill`, `stroke`, etc.)
+- Optimized for SVG coordinate values and path data
 
-Convert trained models to Hugging Face format:
+
+#### Model Training
+
+Training follows ModernBERT's staged approach with progressive context length scaling:
+
+| **Stage** | **Context Length** | **Tokens (Base)** | **Tokens (Large)** |
+|-----------|-------------------|-------------------|-------------------|
+| Phase 1   | 1024             | 12 billion        | 30 billion        |
+| Phase 2   | 8192             | 3 billion         | 9 billion         |
+| Phase 3   | 8192             | 2 billion         | 3 billion         |
+
+Training configurations are available in `svg-encoder/training/configs/`.
+
+### Evaluation Tasks
+
+The model quality is evaluated using **svg-super-glue** benchmark, which includes three tasks:
+
+| **Task** | **Description** | **Challenge** | **Metric** |
+|----------|-----------------|---------------|------------|
+| **AB-test Classification** | Classify SVG images containing single Latin letters ('a' or 'b') | Similar geometric structure within font domain | Accuracy |
+| **Is-optimized Detection** | Determine if two SVGs are structurally identical (before/after optimization) | Visually identical but different vector representations | Accuracy |
+| **Multi-class Classification** | Classify SVGs into semantic categories (love, food, phone, photography, sun) | Semantic understanding across different styles | Accuracy |
+
+### Performance Results
+
+Current validation results on tasks:
+
+| **Model** | **AB-test** | **Is-optimized** | **Multi-class** |
+|-----------|-------------|------------------|-----------------|
+| ModernBERT-base | 90.3% | 0% | 0% |
+| **SVG-BERT-base** | **96.7%** | **0%** | **0%** |
+
+### Usage
+
+#### Model Conversion
+Convert trained checkpoints to HuggingFace format:
 
 ```bash
-python scripts/convert_to_hf.py \
-  --config path/to/config \
-  --checkpoint path/to/checkpoint \
-  --tokenizer path/to/tokenizer \
-  --output path/to/save \
+python svg-encoder/scripts/convert_to_hf.py \
+  --config path/to/config.json \
+  --checkpoint path/to/checkpoint.pt \
+  --tokenizer VectorGraphics/svg_tokenizer \
+  --output converted_model/ \
   --save-tokenizer
 ```
+
+#### Model Validation
+Run evaluation on svg-super-glue tasks:
+
+```bash
+cd svg-encoder/evaluation/svg-super-glue/model_validation
+python train_sweeps.py
+```
+
+Configure hyperparameter sweeps in `sweep_config.yaml`:
+
+```yaml
+method: grid
+parameters:
+  learning_rate:
+    values: [1e-5, 2e-5, 5e-5]
+  batch_size:
+    values: [16, 32]
+  num_train_epochs:
+    values: [3, 5]
+  task_name:
+    values: ["ab-test", "is_optimized", "multi-class-classification"]
+```
+
+### Technical Stack
+
+- **PyTorch** - Core framework
+- **Transformers & Tokenizers** (HuggingFace) - Model architecture and custom tokenizer
+- **ModernBERT** - Base architecture and training scripts
+- **Weights & Biases** - Experiment tracking and visualization
+- **Datasets** - Data loading and processing
+
+### Training Infrastructure
+
+Training was conducted on:
+- **CPU**: AMD EPYC 9654 (96 cores)
+- **GPU**: NVIDIA RTX Ada 6000
+- **Memory**: Optimized for large-scale SVG corpus processing
+
+### Datasets
+
+- **Training**: VectorGraphics/svg_corpus
+- **Evaluation**: VectorGraphics/svg-super-glue
+- **Tokenizer**: VectorGraphics/svg_tokenizer
 
 ### Acknowledgements
 
 - [ModernBERT](https://github.com/AnswerDotAI/ModernBERT) for providing the base architecture
+- [HuggingFace](https://huggingface.co/) for transformers and tokenizers libraries
+- [Weights & Biases](https://wandb.ai/) for experiment tracking
