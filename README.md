@@ -26,6 +26,8 @@ apt update && apt install libcairo2
 
 ## SVG Corpus Pipeline
 
+<img src="imgs/svg-corpus_flow.png" alt="svg corpus" width="600"/>
+
 ### Mining 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1QVc6mTDZSI9ZyU5L-bc3yYwIIz4Nrxka?usp=sharing)
 
@@ -91,6 +93,9 @@ SVGs are saved in JSONL format, organized by MD5 hash prefixes:
 Small part of collected SVGs is available via [link](https://huggingface.co/datasets/VectorGraphics/open-svg).
 
 ### Optimization
+
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/14HTBFO7PNMj5uFQrOGfv0fStjkca_mjk?usp=sharing)
 
 Two-stage optimization pipeline for cleaning and normalizing SVG files:
 
@@ -234,10 +239,10 @@ Modify these parameters in `run_training.py`:
 
 ```python
 # Model selection
-model_name = "Qwen2.5-Coder-32B-Instruct"  # or any supported model
+model_name = "Qwen2.5-Coder-32B-Instruct"
 
 # LoRA configuration
-r = 128                    # LoRA rank
+r = 128                   # LoRA rank
 lora_alpha = 32           # LoRA alpha
 lora_dropout = 0          # LoRA dropout
 
@@ -319,25 +324,13 @@ Current validation results on tasks:
 
 | **Model** | **AB-test** | **Is-optimized** | **Multi-class** |
 |-----------|-------------|------------------|-----------------|
-| ModernBERT-base | 90.3% | 0% | 0% |
-| **SVG-BERT-base** | **96.7%** | **0%** | **0%** |
+| ModernBERT-base | 90.3 | 88.0 | 33.2 |
+| SVG-BERT-base | 96.7 | 96.0 | 50.8 |
+| SVG-BERT-large | TBD | TBD | 60.6 |
 
-### Usage
-
-#### Model Conversion
-Convert trained checkpoints to HuggingFace format:
-
-```bash
-python svg-encoder/scripts/convert_to_hf.py \
-  --config path/to/config.json \
-  --checkpoint path/to/checkpoint.pt \
-  --tokenizer VectorGraphics/svg_tokenizer \
-  --output converted_model/ \
-  --save-tokenizer
-```
 
 #### Model Validation
-Run evaluation on svg-super-glue tasks:
+Run evaluation on svg-super-glue [tasks](https://huggingface.co/datasets/VectorGraphics/svg-super-glue):
 
 ```bash
 cd svg-encoder/evaluation/svg-super-glue/model_validation
@@ -373,13 +366,6 @@ Training was conducted on:
 - **CPU**: AMD EPYC 9654 (96 cores)
 - **GPU**: NVIDIA RTX Ada 6000
 - **Memory**: Optimized for large-scale SVG corpus processing
-
-### Datasets
-
-- **Training**: VectorGraphics/svg_corpus
-- **Evaluation**: VectorGraphics/svg-super-glue
-- **Tokenizer**: VectorGraphics/svg_tokenizer
-
 ### Acknowledgements
 
 - [ModernBERT](https://github.com/AnswerDotAI/ModernBERT) for providing the base architecture
