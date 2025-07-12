@@ -1,5 +1,7 @@
 # Text2SVG
 
+🌐 Available languages: [English](README.md) | [Русский](README.ru.md)
+
 A comprehensive toolkit for SVG mining, optimization, captioning, and text-to-SVG generation. 
 The project consists of three main components working together to create a complete pipeline from raw SVG collection to AI-powered SVG generation.
 
@@ -19,7 +21,7 @@ Text2SVG
 git clone https://github.com/CTLab-ITMO/Text2SVG
 cd Text2SVG
 pip install .
-apt update & apt install libcairo2
+apt update && apt install libcairo2
 ```
 
 ## SVG Corpus Pipeline
