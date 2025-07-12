@@ -1,6 +1,7 @@
 # Text2SVG
 
-A comprehensive toolkit for SVG mining, optimization, captioning, and text-to-SVG generation. The project consists of three main components working together to create a complete pipeline from raw SVG collection to AI-powered SVG generation.
+A comprehensive toolkit for SVG mining, optimization, captioning, and text-to-SVG generation. 
+The project consists of three main components working together to create a complete pipeline from raw SVG collection to AI-powered SVG generation.
 
 ```
 Text2SVG
@@ -292,6 +293,34 @@ inputs = tokenizer([
 ```
 
 ## SVG Encoder
+
+A module for encoding SVGs (obtaining embeddings of vector images) is [here](svg-encoder).
+
+The training is based on [ModernBERT](https://github.com/AnswerDotAI/ModernBERT).
+
+### Training Process
+
+The SVG encoder model was trained in original ModernBERT settings on a large SVG corpus:
+- First stage: 12 billion tokens
+- Second stage: 3 billion tokens 
+- Third stage: 2 billion tokens
+
+### Usage (current scripts)
+
+Convert trained models to Hugging Face format:
+
+```bash
+python scripts/convert_to_hf.py \
+  --config path/to/config \
+  --checkpoint path/to/checkpoint \
+  --tokenizer path/to/tokenizer \
+  --output path/to/save \
+  --save-tokenizer
+```
+
+### Acknowledgements
+
+- [ModernBERT](https://github.com/AnswerDotAI/ModernBERT) for providing the base architecture
 
 ## License
 
