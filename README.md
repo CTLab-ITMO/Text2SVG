@@ -7,7 +7,7 @@ The project consists of three main components working together to create a compl
 
 ```
 Text2SVG
-├── svg-corpus         # Mining, optimization, and captioning
+├── svg-corpus         
 │   ├── mining         # Web scraping SVG files
 │   ├── optimization   # Two-stage SVG optimization
 │   └── captioning     # VLM-based SVG description generation
