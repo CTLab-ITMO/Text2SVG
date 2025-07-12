@@ -26,7 +26,9 @@ apt update && apt install libcairo2
 
 ## SVG Corpus Pipeline
 
-### Mining
+### Mining 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1QVc6mTDZSI9ZyU5L-bc3yYwIIz4Nrxka?usp=sharing)
+
 
 A tool for mining SVG files from websites using URLs from HuggingFace datasets. Collects approximately 4 million URLs per month, considering deduplication.
 
@@ -165,16 +167,7 @@ cd Text2SVG/svg-corpus/captioning
 pip install lmdeploy timm
 ```
 
-#### Basic Usage
-
-```bash
-python caption_intern.py \
-  --dataset VectorGraphics/svg-corpus \
-  --output captions.jsonl \
-  --model OpenGVLab/InternVL3-2B
-```
-
-#### Advanced Usage
+#### Usage
 
 ```bash
 python caption_intern.py \
@@ -187,24 +180,6 @@ python caption_intern.py \
   --tp 1 \
   --max-samples 100_000
 ```
-
-#### Parameters
-
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `--model` | str | `OpenGVLab/InternVL3-2B` | Model name or path (any LMDeploy-compatible VLM) |
-| `--dataset` | str | `VectorGraphics/svg-corpus` | Dataset name or local JSON file path |
-| `--data-files` | str | `*_stage2*` | Data files pattern for HuggingFace datasets |
-| `--output` | str | `augmented_captioned_internvl3_2b.jsonl` | Output JSONL file path |
-| `--resolution` | int | `224` | Image resolution for processing |
-| `--batch-size` | int | `64` | Processing batch size |
-| `--temperature` | float | `0.01` | Generation temperature (0.0-1.0) |
-| `--tp` | int | `1` | Tensor parallel size for multi-GPU |
-| `--session-len` | int | `16384` | Model session length |
-| `--timeout` | int | `1` | SVG to PNG conversion timeout |
-| `--start-index` | int | `0` | Start processing from this index |
-| `--max-samples` | int | `None` | Limit total samples processed |
-| `--seed` | int | `12343` | Random seed for reproducibility |
 
 #### Output Format
 
@@ -323,7 +298,3 @@ python scripts/convert_to_hf.py \
 ### Acknowledgements
 
 - [ModernBERT](https://github.com/AnswerDotAI/ModernBERT) for providing the base architecture
-
-## License
-
-## Citation
