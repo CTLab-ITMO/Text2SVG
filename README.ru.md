@@ -386,14 +386,9 @@ parameters:
 Обучение проводилось на:
 - **CPU**: AMD EPYC 9654 (96 ядер)
 - **GPU**: NVIDIA RTX Ada 6000
-- **Память**: Оптимизировано для обработки больших корпусов SVG
 
 ### Благодарности
 
 - [ModernBERT](https://github.com/AnswerDotAI/ModernBERT) — за предоставленную базовую архитектуру
 - [HuggingFace](https://huggingface.co/) — за библиотеки transformers и tokenizers
 - [Weights & Biases](https://wandb.ai/) — за отслеживание экспериментов
-
-## Лицензия
-
-## Цитирование
